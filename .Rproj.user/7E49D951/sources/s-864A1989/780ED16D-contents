@@ -1,0 +1,41 @@
+# Sample Logistic Regression with `heart` dataset
+
+set.seed(101) # Set Seed so that same sample can be reproduced in future also
+# Now Selecting 75% of data as sample from total 'n' rows of the data  
+
+# REMEMBER to remove the Gender column which is a duplicate of the sex column,
+# name this heart2
+
+heart2 <- heart
+heart2$Gender <- NULL
+
+sample <- sample.int(n = nrow(heart2), size = floor(.75*nrow(heart2)), replace = F)
+train <- heart2[sample, ]
+test  <- heart2[-sample, ]
+
+model <- glm(target ~.,family=binomial(link='logit'),data=train)
+
+summary(model)
+# The summary shows that sex, max heart2 rate, number of colored fluorsocopy vessels
+# are most significant. 
+
+anova(model, test = 'Chisq')
+
+# Test model accuracy
+fitted.results <- predict(model,newdata=test[1:11],type='response')
+fitted.results <- ifelse(fitted.results > 0.5,1,0)
+
+misClasificError <- mean(fitted.results != test$target)
+print(paste('Accuracy',1-misClasificError))
+
+
+
+
+p <- predict(model, newdata=test[1:11], type="response")
+pr <- prediction(p, test$target)
+prf <- performance(pr, measure = "tpr", x.measure = "fpr")
+plot(prf)
+
+auc <- performance(pr, measure = "auc")
+auc <- auc@y.values[[1]]
+auc

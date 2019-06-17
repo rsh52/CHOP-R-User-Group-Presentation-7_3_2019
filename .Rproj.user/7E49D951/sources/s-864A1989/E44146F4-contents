@@ -1,0 +1,194 @@
+---
+title: "R Markdown for CHOP R User Group"
+author: "Richard Hanna (Pro tip: use your own name)"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  word_document: 
+    reference_docx: reference.docx
+params: 
+  MinAge:
+    label: "What is the youngest age to include in analysis?"
+    value: 0
+    input: slider
+    min: 0
+    max: 100
+    step: 1
+    sep: ""
+  MaxAge:
+    label: "What is the oldest age to include in analysis?"
+    value: 0
+    input: slider
+    min: 0
+    max: 100
+    step: 1
+    sep: ""
+  Gender:
+    label: "Please Select a Gender:"
+    value: "M"
+    input: radio
+    choices: ["M", "F"]
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(caTools)
+library(ROCR)
+```
+
+
+## R Markdown for CHOP R User Group
+
+Welcome to the test .rmd file for the CHOP R User Group presentation! I hope you find it useful and informative. This will serve as a template from which you can extrapolate whatever you may need for your own reports in your day to day workflow!
+
+To start, some quick tips on markdown syntax:
+
+- "#"s will declare different heading types
+- "`**`"s on either side of a string of text will make something **bold**
+- "`_ _`"s on either side of a string of text will make something _italic_
+- Use "<>" when you want to include certain hyperlinks, like an e-mail! <hannar1@email.chop.edu>
+- Include hyperlinks in text strings using a combination of []() such as to the [pediRES-Q Website](https://www.pedires-q.org/)
+- You can also call in-line code commands outside of chunks, like asking what is 2+2?  `r 2+2` 
+  - You will have to look at the .rmd file to make sense of that one!
+
+## The Heart Dataset
+
+Let's load the dataset from [Kaggle](https://www.kaggle.com/ronitf/heart-disease-uci) and start perusing what's in it. To save some time I'm going to remove a few columns of data we won't be using.
+
+```{r load data}
+heart <- read.csv("Data_Files/heart.csv")
+
+heart$oldpeak <- NULL
+heart$slope <- NULL
+
+# There's something here about thinking with your heart over your head but 
+# I can't quite put it together...
+head(heart) 
+```
+
+#####
+
+## Initial Analyses
+
+Let's start with a simple plot, looking into max heart rate through the ages by different gender identification. As you make larger and more complicated markdown reports, it will become helpful to keep analyses separate from your `.rmd` so you can easily reference locations of interest. It also helps with debugging!
+
+`source()` is a great way to pull in other files. When you use `source()` the file placed in the argument will be run in its entirety, adding any variables to your environment. So be sure you are aware of what you place in your external file!
+
+### Max HR by Age and Gender
+
+```{r Initial Max HR Plot, echo=FALSE, fig.width=8, fig.height=5}
+# Note the additional arguments inside of the curly brackets to help with proper 
+# sizing in the Word output.
+
+source("Data_Analytics_Files/Data_Wrangling.R")
+
+Max_HR_Gender.plot
+```
+
+#####
+
+### Introducing Parameters
+
+Oh no! It looks like some of the recipients of this report may want to look only at specific age groups of interest. Some wish to view only patients under the age of 60 while another group is only interested in elderly populations.
+
+Notice we have added an additional `dplyr` command, `filter()`, and included our first two parameters, `params$MinAge` & `params$MaxAge`, which were defined in our YAML. This allows for substitutions based on knitting with parameters (see the image below):
+
+![Knitting with Parameters](Imgs/Knit_Params_Image.PNG)
+
+When you knit you will see the GUI prompt come up. Don't worry that we seem to be filtering by males only, we have not yet called this parameter into action anywhere so it won't get applied.
+
+![Knit Shiny GUI](Imgs/Params_GUI.PNG)
+
+#####
+
+
+Now let's take a look at how we can incoporate parameters in our code. For this one I have selected ages between 40 and 60:
+
+```{r First Parameterized Plot, fig.width=8, fig.height=5}
+# Using a similar set-up to the code in our `source()` file:
+
+DT1_Gender.plot <- heart %>% 
+  select(age, Gender, thalach) %>% 
+  filter(age > params$MinAge & age < params$MaxAge) %>% 
+  ggplot(aes(x = age, y = thalach,  color = Gender, shape = Gender)) + 
+  geom_point(size = 3) + my_ggtheme +
+  xlab("Patient Age (Years)") + ylab("Maximum HR (BPM)") +
+  ggtitle("Max HR By Age and Gender") +
+  scale_colour_manual(values = c("firebrick2", "dodgerblue3"))
+
+DT1_Gender.plot
+```
+
+## Additional Tips & Tricks
+
+Now that you’ve seen how to parameterize your scripting, it’s important to think about how to incorporate this in the best ways to make your project succinct, efficient, and clean. 
+
+- One of the pitfalls to parameters is that they will become increasingly more difficult to test in-script (via `CTRL` + `Enter` or the like) since `params$` is not a variable and requires input. And that input can only be delivered via knitting the document. You may want to come up with a way to test your script before committing an overly complex algorithm to parameterization.
+- Parameters play nicely with loops. Using `ifelse()` statements coupled with parameters can allow you to knit with addition/removal of sections of your report based on the inputs you provide on knitting.
+
+
+### **Bonus Content:** Machine Learning
+
+Since we worked with the heart dataset, you may have noticed a `target` column indicating if a patient had heart disease (0) or did not have heart disease (1). I am by no means a statistician or ML expert, but I figured some of you might be. I modeled this model (hehe) after a R blogpost on analyzing the infamous “Titanic” dataset which looked into passenger survival. Since this is a similar classification problem, I’ve chosen to follow this logistic regression analysis. You can find the full post [here](https://www.r-bloggers.com/how-to-perform-a-logistic-regression-in-r/)
+
+
+
+```{r} 
+# Sample Logistic Regression with `heart` dataset
+
+set.seed(101) # Set a seed so results can be reproducible
+
+# Remove the Gender column which is a duplicate of the sex column,
+# name this `heart2`
+heart2 <- heart
+heart2$Gender <- NULL
+
+# Create a sample train and test split of the data using the `caTools` package
+sample <- sample.int(n = nrow(heart2), size = floor(.75*nrow(heart2)), replace = F)
+train <- heart2[sample, ]
+test  <- heart2[-sample, ]
+
+# Fit a logistic regression model to the training dataset
+model <- glm(target ~.,family=binomial(link='logit'),data=train)
+
+# Assess the results of the model
+summary(model)
+
+```
+
+
+It would appear our most signficiant factors influencing this model are the variables `sex`, `cp` (chest pain type), and `ca` (number of major vessels colored by flourosopy) as indicated by their p-values and significance codes (***). The table of deviance can be produced by running an `anova()` command:
+
+```{r}
+anova(model)
+```
+
+To test the model's accuracy, fit the results using R's `predict()` command and establish a threshold at 0.5 to turn the values into classifiers of 1 or 0. then assess the error between the model response and the true values from the target dataset.
+```{r}
+# Test model accuracy
+fitted.results <- predict(model,newdata=test[1:11],type='response')
+fitted.results <- ifelse(fitted.results > 0.5,1,0)
+
+misClasificError <- mean(fitted.results != test$target)
+print(paste('Accuracy',1-misClasificError))
+```
+
+Finally, plot a ROC curve and assess the AUC value:
+```{r}
+p <- predict(model, newdata=test[1:11], type="response")
+pr <- prediction(p, test$target)
+prf <- performance(pr, measure = "tpr", x.measure = "fpr")
+plot(prf)
+
+auc <- performance(pr, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+```
+
+
+
+
+
+

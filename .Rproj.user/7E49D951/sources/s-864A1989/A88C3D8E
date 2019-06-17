@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1560724457834.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "A88C3D8E",
+    "lastKnownWriteTime" : 1560537924,
+    "last_content_update" : 1560537924,
+    "path" : "D:/Coding/R/R_Coding/CHOP R User Group/Data_Analytics_Files/Data_Wrangling.R",
+    "project_path" : "Data_Analytics_Files/Data_Wrangling.R",
+    "properties" : {
+        "cursorPosition" : "28,0",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
