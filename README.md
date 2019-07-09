@@ -17,3 +17,7 @@ The repository consists of a few main components:
 There are also a couple of folders containing images for the markdown, separate analytical R-scripts, and the data set file. 
 
 The data analyzed for this presentation is named *heart.csv* and comes from the UCI Machine Learning Repository thanks to a Kaggle competition which is publicly available [here](https://www.kaggle.com/ronitf/heart-disease-uci).
+
+### Bonus Section
+
+At the end of this project is a light tutorial on applying predictive modeling via logistic regression to the heart dataset with the goal of predicting whether or not a patient with the 13 attributes described in this set will or will not have heart disease. The model was developed thanks to a framework on applying the same methods to determing [passenger survival aboard the Titanic](https://www.r-bloggers.com/how-to-perform-a-logistic-regression-in-r/).
