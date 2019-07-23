@@ -4,6 +4,8 @@
 
 This presentation was delivered to the CHOP R User Group community on 7/3/2019. It comes with a PowerPoint presentation to accompany a ready-to-distribute example RProj learning activity. 
 
+You can watch and listen to the full audio/video recording [here]!(https://drive.google.com/drive/u/0/folders/1EmB7VMh6WjI0YBtKrzgBN2O5_DEHzw6V)
+
 This R project makes use of the UCI heart disease dataset available on Kaggle.com. No identifiable patient information exists and there are no concerns for distribution (just give some polite credit where it's due ;) ).
 
 The repository consists of a few main components:
